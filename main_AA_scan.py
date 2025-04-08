@@ -1,22 +1,25 @@
 import pygame
 import sys
+import os
 
-# Settings
-WIDTH, HEIGHT = 1920, 1080
-FPS = 30
-STRIPE_HEIGHT = 10
-SPEED = 5
+# Screen settings
+WIDTH = 1920
+HEIGHT = 1080
+FPS = 60
+STRIPE_HEIGHT = 100
 BG_COLOR = (0, 0, 0)
 STRIPE_COLOR = (255, 255, 255)
 
+# Sweep duration (1 second = 30 frames at 30Hz)
+FRAMES_PER_SWEEP = 30
+STEP_SIZE = (HEIGHT - STRIPE_HEIGHT) / FRAMES_PER_SWEEP  # move per frame
+
 def run_scanline():
+    os.environ['SDL_VIDEO_WINDOW_POS'] = f"{(3840 - WIDTH) // 2},{(2160 - HEIGHT) // 2}"
+
     pygame.init()
     screen = pygame.display.set_mode((WIDTH, HEIGHT), pygame.NOFRAME)
-    pygame.display.set_caption("Scanline")
-
-    # Move window to center of main screen (3840x2160)
-    import os
-    os.environ['SDL_VIDEO_WINDOW_POS'] = f"{(3840 - WIDTH) // 2},{(2160 - HEIGHT) // 2}"
+    pygame.display.set_caption("Sharp Scanline Sweep")
 
     clock = pygame.time.Clock()
     y = 0
@@ -24,6 +27,7 @@ def run_scanline():
     running = True
     while running:
         clock.tick(FPS)
+
         for event in pygame.event.get():
             if event.type == pygame.QUIT or (
                 event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE
@@ -32,14 +36,12 @@ def run_scanline():
 
         screen.fill(BG_COLOR)
 
-        # Use antialiased alpha stripe (slightly blended top/bottom if desired)
-        stripe_surface = pygame.Surface((WIDTH, STRIPE_HEIGHT), pygame.SRCALPHA)
-        stripe_surface.fill(STRIPE_COLOR)
-        screen.blit(stripe_surface, (0, y))
-
+        # Draw sharp-edged stripe
+        pygame.draw.rect(screen, STRIPE_COLOR, (0, int(y), WIDTH, STRIPE_HEIGHT))
         pygame.display.flip()
 
-        y += SPEED
+        # Move stripe down
+        y += STEP_SIZE
         if y > HEIGHT:
             y = 0
 
